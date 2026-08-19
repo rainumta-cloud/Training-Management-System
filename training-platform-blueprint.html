@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Training Platform Blueprint</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@500;600;700&family=Sarabun:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FBFAF7;
+    --surface:#FFFFFF;
+    --surface-alt:#F3F1EA;
+    --text:#1E2420;
+    --text-muted:#5C6660;
+    --border:#E4E1D7;
+    --accent:#2A6F6B;
+    --accent-strong:#1F5551;
+    --accent-soft:#E4EEEC;
+    --accent-2:#C9782F;
+    --accent-2-soft:#F6E8D8;
+    --success:#3D8361;
+    --success-soft:#E3F0E7;
+    --danger:#B23A3A;
+    --danger-soft:#F5E3E1;
+    --shadow: 0 1px 2px rgba(30,36,32,0.04), 0 8px 24px rgba(30,36,32,0.05);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#12161A;
+      --surface:#1A1F22;
+      --surface-alt:#20262A;
+      --text:#E7E9E6;
+      --text-muted:#9AA39D;
+      --border:#2B3236;
+      --accent:#57B0A6;
+      --accent-strong:#7BC7BE;
+      --accent-soft:rgba(87,176,166,0.14);
+      --accent-2:#E0954B;
+      --accent-2-soft:rgba(224,149,75,0.14);
+      --success:#5FB98A;
+      --success-soft:rgba(95,185,138,0.14);
+      --danger:#E07A7A;
+      --danger-soft:rgba(224,102,102,0.14);
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#12161A;
+    --surface:#1A1F22;
+    --surface-alt:#20262A;
+    --text:#E7E9E6;
+    --text-muted:#9AA39D;
+    --border:#2B3236;
+    --accent:#57B0A6;
+    --accent-strong:#7BC7BE;
+    --accent-soft:rgba(87,176,166,0.14);
+    --accent-2:#E0954B;
+    --accent-2-soft:rgba(224,149,75,0.14);
+    --success:#5FB98A;
+    --success-soft:rgba(95,185,138,0.14);
+    --danger:#E07A7A;
+    --danger-soft:rgba(224,102,102,0.14);
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
+  }
+
+  *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:"Sarabun","Noto Sans Thai",sans-serif;
+    font-size:16px;
+    line-height:1.75;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{
+    font-family:"Kanit","Noto Sans Thai",sans-serif;
+    text-wrap:balance;
+    color:var(--text);
+    line-height:1.3;
+  }
+  a{color:var(--accent);}
+  code, .mono{ font-family:"JetBrains Mono", ui-monospace, monospace; }
+  .tabnum{ font-variant-numeric: tabular-nums; }
+
+  .shell{
+    display:grid;
+    grid-template-columns: 260px minmax(0,1fr);
+    max-width:1280px;
+    margin:0 auto;
+  }
+  @media (max-width: 880px){
+    .shell{ grid-template-columns: 1fr; }
+  }
+
+  /* ---- Sidebar TOC ---- */
+  .toc{
+    position:sticky;
+    top:0;
+    align-self:start;
+    height:100vh;
+    overflow-y:auto;
+    padding:32px 20px 32px 28px;
+    border-right:1px solid var(--border);
+  }
+  @media (max-width: 880px){
+    .toc{
+      position:static;
+      height:auto;
+      border-right:none;
+      border-bottom:1px solid var(--border);
+      padding:20px 24px;
+      overflow-x:auto;
+    }
+    .toc ol{ display:flex; gap:18px; white-space:nowrap; }
+    .toc ol li{ margin:0; }
+  }
+  .toc-brand{
+    display:flex; align-items:center; gap:10px;
+    margin-bottom:22px;
+  }
+  .toc-mark{
+    width:30px;height:30px;border-radius:8px;
+    background:var(--accent); color:var(--surface);
+    display:flex; align-items:center; justify-content:center;
+    font-family:"Kanit"; font-weight:700; font-size:15px;
+    flex:none;
+  }
+  .toc-brand span{
+    font-family:"Kanit"; font-weight:600; font-size:15px; color:var(--text);
+  }
+  .toc ol{
+    list-style:none; margin:0; padding:0; counter-reset:toc;
+  }
+  .toc li{ margin-bottom:6px; }
+  .toc a{
+    text-decoration:none;
+    color:var(--text-muted);
+    font-size:13.5px;
+    display:block;
+    padding:6px 10px;
+    border-radius:6px;
+    transition: background .15s, color .15s;
+  }
+  .toc a:hover{ background:var(--surface-alt); color:var(--text); }
+
+  /* ---- Main content ---- */
+  main{ padding:0 0 80px; min-width:0; }
+  .hero{
+    padding:56px 48px 40px;
+    border-bottom:1px solid var(--border);
+  }
+  @media (max-width:880px){ .hero{ padding:40px 24px 32px; } }
+  .eyebrow{
+    display:inline-flex; align-items:center; gap:8px;
+    font-size:12.5px; font-weight:600; letter-spacing:.06em;
+    color:var(--accent); text-transform:uppercase;
+    margin-bottom:14px;
+  }
+  .eyebrow::before{
+    content:""; width:7px; height:7px; border-radius:50%;
+    background:var(--accent); display:inline-block;
+  }
+  .hero h1{
+    font-size:clamp(28px,4vw,40px);
+    font-weight:700;
+    margin:0 0 14px;
+  }
+  .hero p.lede{
+    font-size:17px; color:var(--text-muted); max-width:640px; margin:0 0 22px;
+  }
+  .hero-meta{
+    display:flex; flex-wrap:wrap; gap:10px;
+  }
+  .chip{
+    font-size:12.5px; padding:5px 12px; border-radius:100px;
+    background:var(--surface-alt); border:1px solid var(--border);
+    color:var(--text-muted);
+  }
+
+  section{
+    padding:44px 48px;
+    border-bottom:1px solid var(--border);
+  }
+  @media (max-width:880px){ section{ padding:36px 24px; } }
+  section:last-child{ border-bottom:none; }
+
+  .sec-head{ margin-bottom:24px; max-width:720px; }
+  .sec-num{
+    font-family:"JetBrains Mono"; font-size:12.5px; color:var(--accent-2);
+    font-weight:500; letter-spacing:.04em; display:block; margin-bottom:8px;
+  }
+  section h2{ font-size:24px; font-weight:600; margin:0 0 8px; }
+  section .sec-desc{ color:var(--text-muted); font-size:15px; margin:0; }
+
+  .prose{ max-width:720px; }
+  .prose p{ margin:0 0 14px; }
+  .prose ul{ margin:0 0 14px; padding-left:22px; }
+  .prose li{ margin-bottom:6px; }
+
+  /* Journey timeline */
+  .journey{
+    display:flex; flex-direction:column; gap:0;
+    border:1px solid var(--border); border-radius:12px;
+    overflow:hidden; background:var(--surface);
+  }
+  .journey-step{
+    display:grid; grid-template-columns:40px 1fr;
+    gap:16px; padding:16px 18px;
+    border-bottom:1px solid var(--border);
+  }
+  .journey-step:last-child{ border-bottom:none; }
+  .journey-dot{
+    width:28px; height:28px; border-radius:50%;
+    background:var(--accent-soft); color:var(--accent);
+    display:flex; align-items:center; justify-content:center;
+    font-family:"JetBrains Mono"; font-size:12px; font-weight:600;
+  }
+  .journey-step h4{ margin:0 0 4px; font-size:15px; font-weight:600; }
+  .journey-step p{ margin:0; font-size:14px; color:var(--text-muted); }
+
+  .journey-block + .journey-block{ margin-top:20px; }
+  .journey-label{
+    font-size:13px; font-weight:600; color:var(--text-muted);
+    text-transform:uppercase; letter-spacing:.05em; margin:0 0 10px;
+  }
+
+  /* Feature cards */
+  .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+  @media (max-width:720px){ .grid2{ grid-template-columns:1fr; } }
+  .panel{
+    border:1px solid var(--border); border-radius:12px;
+    background:var(--surface); padding:22px 22px 8px;
+  }
+  .panel h3{
+    font-size:16px; margin:0 0 4px; display:flex; align-items:center; gap:8px;
+  }
+  .panel .role-tag{
+    font-size:11px; font-weight:600; padding:3px 9px; border-radius:100px;
+  }
+  .role-tag.member{ background:var(--accent-soft); color:var(--accent-strong); }
+  .role-tag.admin{ background:var(--accent-2-soft); color:var(--accent-2); }
+  .panel .panel-sub{ font-size:13.5px; color:var(--text-muted); margin:0 0 16px; }
+  .feat-list{ list-style:none; margin:0; padding:0; }
+  .feat-list li{
+    padding:12px 0; border-top:1px solid var(--border);
+    font-size:14.5px;
+  }
+  .feat-list li:first-child{ border-top:none; }
+  .feat-list b{ display:block; margin-bottom:2px; font-weight:600; }
+  .feat-list span{ color:var(--text-muted); font-size:13.5px; }
+
+  /* Architecture diagram */
+  .diagram-wrap{
+    border:1px solid var(--border); border-radius:12px;
+    background:var(--surface); padding:20px;
+    overflow-x:auto;
+  }
+  .diagram-wrap svg{ display:block; min-width:640px; }
+
+  .stack-table{ width:100%; border-collapse:collapse; margin-top:20px; font-size:14px; }
+  .stack-table th{
+    text-align:left; font-family:"Kanit"; font-weight:600; font-size:13px;
+    color:var(--text-muted); text-transform:uppercase; letter-spacing:.03em;
+    padding:8px 14px; border-bottom:1px solid var(--border);
+  }
+  .stack-table td{
+    padding:12px 14px; border-bottom:1px solid var(--border); vertical-align:top;
+  }
+  .stack-table tr:last-child td{ border-bottom:none; }
+  .stack-table .layer{ font-weight:600; white-space:nowrap; }
+  .stack-table .why{ color:var(--text-muted); }
+
+  /* Mechanism steps */
+  .mech-flow{
+    display:flex; flex-wrap:wrap; gap:12px; align-items:stretch;
+    margin-bottom:22px;
+  }
+  .mech-card{
+    flex:1 1 150px; border:1px solid var(--border); border-radius:10px;
+    background:var(--surface); padding:14px 16px;
+  }
+  .mech-card .k{ font-family:"JetBrains Mono"; font-size:11.5px; color:var(--accent); margin-bottom:6px; display:block; }
+  .mech-card p{ margin:0; font-size:13.5px; color:var(--text-muted); }
+  .arrow{ align-self:center; color:var(--border); font-size:18px; }
+  @media (max-width:720px){ .arrow{ display:none; } }
+
+  .callout{
+    border-left:3px solid var(--accent-2);
+    background:var(--accent-2-soft);
+    border-radius:0 10px 10px 0;
+    padding:14px 18px; font-size:14px; color:var(--text);
+    max-width:720px;
+  }
+  .callout b{ color:var(--accent-2); }
+
+  /* Quiz rule cards */
+  .rule-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:20px; }
+  @media (max-width:720px){ .rule-grid{ grid-template-columns:1fr 1fr; } }
+  .rule-card{
+    border:1px solid var(--border); border-radius:10px; background:var(--surface);
+    padding:16px; text-align:left;
+  }
+  .rule-card .num{ font-family:"JetBrains Mono"; font-size:22px; font-weight:500; color:var(--accent); }
+  .rule-card .lbl{ font-size:12.5px; color:var(--text-muted); margin-top:4px; }
+
+  /* Schema tables */
+  .schema-grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  @media (max-width:780px){ .schema-grid{ grid-template-columns:1fr; } }
+  .entity{
+    border:1px solid var(--border); border-radius:10px; overflow:hidden; background:var(--surface);
+  }
+  .entity-head{
+    background:var(--surface-alt); padding:9px 14px;
+    font-family:"JetBrains Mono"; font-size:13px; font-weight:500;
+    border-bottom:1px solid var(--border); color:var(--accent-strong);
+  }
+  .entity-body{ padding:10px 14px 12px; font-family:"JetBrains Mono"; font-size:12.5px; color:var(--text-muted); }
+  .entity-body div{ padding:3px 0; display:flex; justify-content:space-between; gap:10px; }
+  .entity-body .fname{ color:var(--text); }
+
+  /* Dashboard mock */
+  .dash-mock{
+    border:1px solid var(--border); border-radius:12px; background:var(--surface);
+    padding:20px; margin-bottom:20px;
+  }
+  .kpi-row{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:16px; }
+  @media (max-width:720px){ .kpi-row{ grid-template-columns:1fr 1fr; } }
+  .kpi{
+    border:1px solid var(--border); border-radius:8px; padding:12px 14px; background:var(--surface-alt);
+  }
+  .kpi .v{ font-family:"JetBrains Mono"; font-size:20px; font-weight:500; }
+  .kpi .l{ font-size:12px; color:var(--text-muted); margin-top:2px; }
+  .bar-chart{ display:flex; align-items:flex-end; gap:8px; height:110px; padding:0 4px; }
+  .bar-chart .bar{ flex:1; background:var(--accent); border-radius:4px 4px 0 0; opacity:.85; position:relative; }
+  .bar-chart .bar span{
+    position:absolute; bottom:-20px; left:0; right:0; text-align:center;
+    font-size:10.5px; color:var(--text-muted);
+  }
+
+  /* Non-functional grid */
+  .nf-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+  @media (max-width:780px){ .nf-grid{ grid-template-columns:1fr 1fr; } }
+  @media (max-width:520px){ .nf-grid{ grid-template-columns:1fr; } }
+  .nf-card{ border:1px solid var(--border); border-radius:10px; padding:16px; background:var(--surface); }
+  .nf-card h4{ margin:0 0 6px; font-size:14.5px; font-family:"Kanit"; font-weight:600; }
+  .nf-card p{ margin:0; font-size:13px; color:var(--text-muted); }
+
+  /* Roadmap */
+  .phase{
+    display:grid; grid-template-columns:64px 1fr; gap:18px;
+    padding:22px 0; border-top:1px solid var(--border);
+  }
+  .phase:first-child{ border-top:none; padding-top:0; }
+  .phase-num{
+    font-family:"Kanit"; font-weight:700; font-size:26px; color:var(--border);
+  }
+  .phase h3{ font-size:17px; margin:0 0 4px; }
+  .phase .dur{
+    font-family:"JetBrains Mono"; font-size:12px; color:var(--accent);
+    background:var(--accent-soft); padding:3px 9px; border-radius:100px; margin-left:10px;
+  }
+  .phase ul{ margin:10px 0 0; padding-left:20px; font-size:14px; color:var(--text-muted); }
+  .phase li{ margin-bottom:4px; }
+
+  footer{
+    padding:32px 48px; color:var(--text-muted); font-size:13px;
+  }
+  @media (max-width:880px){ footer{ padding:24px; } }
+</style>
+</head>
+<body>
+<div class="shell">
+  <nav class="toc">
+    <div class="toc-brand">
+      <div class="toc-mark">TP</div>
+      <span>Training Platform</span>
+    </div>
+    <ol>
+      <li><a href="#overview">ภาพรวมระบบ</a></li>
+      <li><a href="#roles">บทบาทและ Flow</a></li>
+      <li><a href="#features">ฟีเจอร์หลัก</a></li>
+      <li><a href="#stack">สถาปัตยกรรม &amp; Stack</a></li>
+      <li><a href="#watch">การจับเวลาวิดีโอ</a></li>
+      <li><a href="#quiz">ระบบข้อสอบ</a></li>
+      <li><a href="#schema">โครงสร้างข้อมูล</a></li>
+      <li><a href="#dashboard">Dashboard ผู้ดูแล</a></li>
+      <li><a href="#nonfunc">Scale &amp; ความปลอดภัย</a></li>
+      <li><a href="#roadmap">แผนดำเนินงาน</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <div class="hero">
+      <div class="eyebrow">System Blueprint</div>
+      <h1>ระบบจัดการฝึกอบรมออนไลน์ (Training Management System)</h1>
+      <p class="lede">แพลตฟอร์มเรียนผ่านวิดีโอสำหรับพนักงาน พร้อม CMS สำหรับแอดมินอัปโหลดคอร์ส บังคับดูจบก่อนสอบ ผ่านเกณฑ์ 70% ถึงจะนับว่า Complete และมีแดชบอร์ดสรุปผลให้ผู้ดูแลติดตามภาพรวม</p>
+      <div class="hero-meta">
+        <span class="chip">Self-host video บนเซิร์ฟเวอร์บริษัท</span>
+        <span class="chip">Email/Password Login</span>
+        <span class="chip">ผู้ใช้ 500–5,000 คน</span>
+        <span class="chip">อัปเดต 19 ส.ค. 2569</span>
+      </div>
+    </div>
+
+    <section id="overview">
+      <div class="sec-head">
+        <span class="sec-num">01</span>
+        <h2>ภาพรวมระบบ</h2>
+        <p class="sec-desc">ขอบเขตหลักและกติกาที่ต้องยึดตลอดการออกแบบ</p>
+      </div>
+      <div class="prose">
+        <p>ระบบแบ่งเป็นสองฝั่งที่ทำงานบนโครงสร้างข้อมูลเดียวกัน คือฝั่ง <b>ผู้เรียน (Member)</b> ที่เข้ามาเรียนคอร์สผ่านเบราว์เซอร์ และฝั่ง <b>ผู้ดูแล (Admin/CMS)</b> ที่จัดการเนื้อหา ข้อสอบ และดูภาพรวมผลการเรียน</p>
+        <p>กติกาหลักที่ล็อกไว้ตั้งแต่ต้น เพื่อให้การออกแบบฐานข้อมูลและ flow สอดคล้องกันทั้งระบบ:</p>
+        <ul>
+          <li>ผู้เรียนต้อง <b>ดูวิดีโอจนจบ</b> (ตามเกณฑ์ที่กำหนด) ก่อนปุ่ม "ทำข้อสอบ" จะปลดล็อก</li>
+          <li>ทำข้อสอบได้คะแนน <b>≥ 70%</b> ถึงจะนับสถานะคอร์สเป็น <b>Complete</b></li>
+          <li>วิดีโอทั้งหมดจัดเก็บและสตรีมจาก <b>เซิร์ฟเวอร์ของบริษัทเอง</b> ไม่พึ่ง cloud ภายนอก</li>
+          <li>สมัคร/ล็อกอินด้วย <b>อีเมล + รหัสผ่าน</b> แบบง่าย ไม่ผูก SSO ในเฟสแรก</li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="roles">
+      <div class="sec-head">
+        <span class="sec-num">02</span>
+        <h2>บทบาทผู้ใช้และ Flow การทำงาน</h2>
+        <p class="sec-desc">เส้นทางของผู้เรียนหนึ่งคอร์ส และงานประจำของแอดมิน</p>
+      </div>
+
+      <div class="journey-block">
+        <p class="journey-label">Member Journey — เรียนหนึ่งคอร์สจนจบ</p>
+        <div class="journey">
+          <div class="journey-step">
+            <div class="journey-dot">1</div>
+            <div><h4>สมัครสมาชิก / ล็อกอิน</h4><p>กรอกอีเมล ตั้งรหัสผ่าน ยืนยันผ่านลิงก์อีเมล (ครั้งเดียว)</p></div>
+          </div>
+          <div class="journey-step">
+            <div class="journey-dot">2</div>
+            <div><h4>เลือกคอร์สจากแคตตาล็อก</h4><p>ดูรายละเอียด บทเรียนย่อย ระยะเวลารวม และสถานะความคืบหน้าเดิม (ถ้าเคยเข้าเรียน)</p></div>
+          </div>
+          <div class="journey-step">
+            <div class="journey-dot">3</div>
+            <div><h4>ดูวิดีโอแต่ละบทเรียน</h4><p>ระบบนับเวลาที่ดูจริงเบื้องหลัง ป้องกันการลากข้ามเพื่อเลี่ยงเนื้อหา</p></div>
+          </div>
+          <div class="journey-step">
+            <div class="journey-dot">4</div>
+            <div><h4>ปลดล็อกแบบทดสอบ</h4><p>เมื่อดูครบทุกบทเรียนถึงเกณฑ์ ปุ่ม "ทำข้อสอบ" จึงจะกดได้</p></div>
+          </div>
+          <div class="journey-step">
+            <div class="journey-dot">5</div>
+            <div><h4>ทำข้อสอบและดูผลทันที</h4><p>สุ่มคำถามจากคลังข้อสอบ ตรวจให้คะแนนอัตโนมัติเมื่อส่งคำตอบ</p></div>
+          </div>
+          <div class="journey-step">
+            <div class="journey-dot">6</div>
+            <div><h4>ผ่าน ≥ 70% → Complete</h4><p>ไม่ผ่าน ให้ทบทวนเนื้อหาแล้วสอบใหม่ได้ตามจำนวนครั้งที่แอดมินกำหนด</p></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="journey-block">
+        <p class="journey-label">Admin Journey — งานจัดการเนื้อหาและติดตามผล</p>
+        <div class="journey">
+          <div class="journey-step">
+            <div class="journey-dot">1</div>
+            <div><h4>สร้างคอร์สและอัปโหลดวิดีโอ</h4><p>ตั้งชื่อ คำอธิบาย จัดลำดับบทเรียน อัปโหลดไฟล์วิดีโอเข้าระบบ (ประมวลผลเป็น HLS เบื้องหลัง)</p></div>
+          </div>
+          <div class="journey-step">
+            <div class="journey-dot">2</div>
+            <div><h4>สร้างคลังข้อสอบ</h4><p>เพิ่มคำถามแบบเลือกตอบ กำหนดจำนวนข้อ/เกณฑ์ผ่าน/จำนวนครั้งที่สอบซ้ำได้ต่อคอร์ส</p></div>
+          </div>
+          <div class="journey-step">
+            <div class="journey-dot">3</div>
+            <div><h4>เผยแพร่คอร์สให้กลุ่มผู้เรียน</h4><p>เลือกเผยแพร่ทั้งบริษัทหรือเฉพาะแผนก/กลุ่มที่กำหนด</p></div>
+          </div>
+          <div class="journey-step">
+            <div class="journey-dot">4</div>
+            <div><h4>ติดตามผลผ่านแดชบอร์ด</h4><p>ดูอัตราความสำเร็จ คะแนนเฉลี่ย และผู้เรียนที่ยังไม่เริ่ม/ไม่ผ่าน</p></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="features">
+      <div class="sec-head">
+        <span class="sec-num">03</span>
+        <h2>ฟีเจอร์หลักแบ่งตามฝั่งผู้ใช้</h2>
+        <p class="sec-desc">ขอบเขตฟีเจอร์ของ MVP สำหรับผู้เรียนและผู้ดูแล</p>
+      </div>
+      <div class="grid2">
+        <div class="panel">
+          <h3>ฝั่งผู้เรียน <span class="role-tag member">Member</span></h3>
+          <p class="panel-sub">หน้าเว็บสำหรับพนักงานทั่วไป</p>
+          <ul class="feat-list">
+            <li><b>สมัคร/ล็อกอิน/ลืมรหัสผ่าน</b><span>ยืนยันตัวตนผ่านอีเมลบริษัท</span></li>
+            <li><b>แคตตาล็อกคอร์ส</b><span>ค้นหา จัดหมวดหมู่ ดูสถานะ (ยังไม่เริ่ม/กำลังเรียน/จบแล้ว)</span></li>
+            <li><b>วิดีโอเพลเยอร์พร้อม progress bar</b><span>บันทึกจุดที่ดูล่าสุด กลับมาดูต่อได้</span></li>
+            <li><b>แบบทดสอบท้ายคอร์ส</b><span>ปลดล็อกเมื่อดูวิดีโอครบ แสดงผลคะแนนทันที</span></li>
+            <li><b>ประวัติการเรียนของตัวเอง</b><span>คอร์สที่จบแล้ว คะแนนที่ได้ ใบประกาศนียบัตร (ถ้ามี)</span></li>
+          </ul>
+        </div>
+        <div class="panel">
+          <h3>ฝั่งผู้ดูแล <span class="role-tag admin">Admin / CMS</span></h3>
+          <p class="panel-sub">แผงควบคุมสำหรับทีมจัดฝึกอบรม</p>
+          <ul class="feat-list">
+            <li><b>จัดการคอร์สและบทเรียน</b><span>สร้าง/แก้ไข/เรียงลำดับ/เผยแพร่หรือซ่อนคอร์ส</span></li>
+            <li><b>อัปโหลด &amp; จัดการวิดีโอ</b><span>ติดตามสถานะแปลงไฟล์ ขนาด ความยาว ที่จัดเก็บ</span></li>
+            <li><b>สร้างคลังข้อสอบ</b><span>ตั้งเกณฑ์ผ่าน จำนวนข้อสุ่ม จำนวนครั้งที่สอบซ้ำได้</span></li>
+            <li><b>จัดการผู้ใช้และสิทธิ์</b><span>เพิ่ม/ปิดการใช้งานผู้ใช้ กำหนดแอดมินเพิ่ม แบ่งกลุ่ม/แผนก</span></li>
+            <li><b>แดชบอร์ดสรุปผล</b><span>อัตราจบคอร์ส คะแนนเฉลี่ย รายชื่อค้างสอบ ส่งออกรายงาน</span></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="stack">
+      <div class="sec-head">
+        <span class="sec-num">04</span>
+        <h2>สถาปัตยกรรมระบบและ Tech Stack ที่แนะนำ</h2>
+        <p class="sec-desc">ออกแบบให้ deploy บนเซิร์ฟเวอร์บริษัทได้จริง รองรับผู้ใช้ระดับพันคนและวิดีโอ self-host</p>
+      </div>
+
+      <div class="diagram-wrap">
+        <svg viewBox="0 0 920 360" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="แผนภาพสถาปัตยกรรมระบบ">
+          <defs>
+            <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="var(--text-muted)"></path>
+            </marker>
+          </defs>
+          <style>
+            .box{ fill:var(--surface); stroke:var(--border); stroke-width:1.5; }
+            .box-accent{ fill:var(--accent-soft); stroke:var(--accent); stroke-width:1.5; }
+            .lbl{ font-family:"Kanit","Sarabun",sans-serif; font-size:14px; fill:var(--text); font-weight:600; }
+            .sub{ font-family:"JetBrains Mono",monospace; font-size:11px; fill:var(--text-muted); }
+            .edge{ stroke:var(--text-muted); stroke-width:1.4; fill:none; marker-end:url(#arrow); }
+          </style>
+
+          <rect x="20" y="150" width="150" height="64" rx="10" class="box"></rect>
+          <text x="95" y="176" text-anchor="middle" class="lbl">เบราว์เซอร์</text>
+          <text x="95" y="194" text-anchor="middle" class="sub">Next.js (React)</text>
+
+          <path d="M170,182 H235" class="edge"></path>
+
+          <rect x="235" y="150" width="150" height="64" rx="10" class="box"></rect>
+          <text x="310" y="176" text-anchor="middle" class="lbl">Nginx Reverse Proxy</text>
+          <text x="310" y="194" text-anchor="middle" class="sub">TLS / signed URL</text>
+
+          <path d="M385,182 H450" class="edge"></path>
+
+          <rect x="450" y="150" width="160" height="64" rx="10" class="box-accent"></rect>
+          <text x="530" y="176" text-anchor="middle" class="lbl">API Server</text>
+          <text x="530" y="194" text-anchor="middle" class="sub">Node.js (NestJS)</text>
+
+          <path d="M610,168 H700" class="edge"></path>
+          <path d="M530,150 V90 H700" class="edge"></path>
+          <path d="M610,196 H700 V196" class="edge"></path>
+
+          <rect x="700" y="60" width="200" height="56" rx="10" class="box"></rect>
+          <text x="800" y="84" text-anchor="middle" class="lbl">PostgreSQL</text>
+          <text x="800" y="102" text-anchor="middle" class="sub">ผู้ใช้ / คอร์ส / คะแนน</text>
+
+          <rect x="700" y="140" width="200" height="56" rx="10" class="box"></rect>
+          <text x="800" y="164" text-anchor="middle" class="lbl">Redis + Queue</text>
+          <text x="800" y="182" text-anchor="middle" class="sub">งานแปลงไฟล์วิดีโอ</text>
+
+          <rect x="700" y="220" width="200" height="56" rx="10" class="box"></rect>
+          <text x="800" y="244" text-anchor="middle" class="lbl">Video Storage</text>
+          <text x="800" y="262" text-anchor="middle" class="sub">ไฟล์ต้นฉบับ + HLS</text>
+
+          <path d="M530,214 V300 H800 V276" class="edge"></path>
+          <text x="660" y="300" class="sub">FFmpeg worker แปลงเป็น HLS หลายบิตเรต</text>
+        </svg>
+      </div>
+
+      <table class="stack-table">
+        <thead>
+          <tr><th>ชั้นระบบ</th><th>เทคโนโลยีที่แนะนำ</th><th>เหตุผล</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="layer">Frontend</td>
+            <td class="mono">Next.js + TypeScript</td>
+            <td class="why">SSR หน้าแคตตาล็อกให้โหลดเร็ว ทีมหาคนต่อยอดง่าย ใช้ร่วมกับ UI kit อย่าง shadcn/ui ได้ทันที</td>
+          </tr>
+          <tr>
+            <td class="layer">Backend API</td>
+            <td class="mono">Node.js (NestJS)</td>
+            <td class="why">แยกโมดูล Auth / Course / Quiz / Reporting ชัดเจน เหมาะกับทีมขนาดเล็ก-กลาง ดูแลง่ายกว่าคุมทุกอย่างใน Next.js API routes</td>
+          </tr>
+          <tr>
+            <td class="layer">ฐานข้อมูล</td>
+            <td class="mono">PostgreSQL</td>
+            <td class="why">รองรับ query เชิงสถิติสำหรับแดชบอร์ดได้ดี มี JSONB เก็บโครงสร้างคำถามข้อสอบที่ยืดหยุ่น</td>
+          </tr>
+          <tr>
+            <td class="layer">วิดีโอ</td>
+            <td class="mono">FFmpeg → HLS + Nginx</td>
+            <td class="why">แปลงไฟล์เป็นหลายบิตเรตเพื่อ stream ลื่นตามความเร็วเน็ตผู้ใช้ โดยยังเก็บไฟล์ทั้งหมดบนเซิร์ฟเวอร์บริษัท</td>
+          </tr>
+          <tr>
+            <td class="layer">คิวงานเบื้องหลัง</td>
+            <td class="mono">Redis + BullMQ</td>
+            <td class="why">แปลงไฟล์วิดีโอใช้เวลา ต้องทำแบบ background job ไม่บล็อกหน้าอัปโหลดของแอดมิน</td>
+          </tr>
+          <tr>
+            <td class="layer">Deploy</td>
+            <td class="mono">Docker Compose</td>
+            <td class="why">รวมทุกบริการเป็นชุดเดียว ติดตั้งซ้ำบนเซิร์ฟเวอร์บริษัทได้ง่าย ทีม IT ดูแลต่อไม่ยาก</td>
+          </tr>
+        </tbody>
+      </table>
+      <p style="max-width:720px;color:var(--text-muted);font-size:13.5px;margin-top:14px;">
+        หมายเหตุ: ถ้าทีม IT บริษัทถนัด .NET/SQL Server และมี Windows Server อยู่แล้ว สามารถสลับเป็น ASP.NET Core + SQL Server + IIS ได้ในแนวคิดสถาปัตยกรรมเดียวกัน — ส่วนที่ต้องคงไว้คือ FFmpeg สำหรับแปลงวิดีโอและคิวงานเบื้องหลัง
+      </p>
+    </section>
+
+    <section id="watch">
+      <div class="sec-head">
+        <span class="sec-num">05</span>
+        <h2>กลไกจับเวลา &amp; บังคับดูจบก่อนสอบ</h2>
+        <p class="sec-desc">ป้องกันการลากวิดีโอข้ามเพื่อเลี่ยงเนื้อหา โดยไม่ทำให้ผู้เรียนดูต่อจากจุดเดิมไม่ได้</p>
+      </div>
+      <div class="mech-flow">
+        <div class="mech-card"><span class="k">01 · client</span><p>เพลเยอร์ส่ง heartbeat ทุก 5–10 วินาที บอกตำแหน่งเวลาปัจจุบันที่กำลังเล่น</p></div>
+        <div class="arrow">→</div>
+        <div class="mech-card"><span class="k">02 · server</span><p>สะสม "ช่วงเวลาที่ดูจริง" ต่อผู้ใช้ต่อวิดีโอ ไม่นับจุดที่ถูกลากข้ามแบบไม่ผ่านสายตา</p></div>
+        <div class="arrow">→</div>
+        <div class="mech-card"><span class="k">03 · rule</span><p>ล็อกไม่ให้ลากไปเกินจุดไกลสุดที่เคยดูถึง (บวก buffer สั้นๆ) แต่ดูซ้ำจุดเดิมได้ตามปกติ</p></div>
+        <div class="arrow">→</div>
+        <div class="mech-card"><span class="k">04 · unlock</span><p>เมื่อสัดส่วนที่ดูจริง ≥ 95% ของความยาววิดีโอ ระบบปลดล็อกปุ่มทำข้อสอบของบทเรียนนั้น</p></div>
+      </div>
+      <div class="callout">
+        <b>ทางเลือกออกแบบ:</b> เกณฑ์ 95% และการล็อกการลากข้ามควรเป็นค่าที่ปรับได้ต่อคอร์ส (โหมดเข้มงวด vs โหมดปล่อยอิสระ) เพราะบางคอร์สอาจต้องการความยืดหยุ่นให้พนักงานอาวุโสข้ามเนื้อหาที่รู้แล้วได้
+      </div>
+    </section>
+
+    <section id="quiz">
+      <div class="sec-head">
+        <span class="sec-num">06</span>
+        <h2>ระบบข้อสอบและเกณฑ์ผ่าน</h2>
+        <p class="sec-desc">คุมโดยแอดมินต่อคอร์ส คำนวณผลอัตโนมัติทันทีที่ส่งคำตอบ</p>
+      </div>
+      <div class="rule-grid">
+        <div class="rule-card"><div class="num">70%</div><div class="lbl">เกณฑ์ผ่านเริ่มต้น (ปรับได้ต่อคอร์ส)</div></div>
+        <div class="rule-card"><div class="num tabnum">N</div><div class="lbl">จำนวนข้อสุ่มจากคลังคำถามทั้งหมด</div></div>
+        <div class="rule-card"><div class="num tabnum">≤3</div><div class="lbl">จำนวนครั้งสอบซ้ำที่แอดมินกำหนดได้</div></div>
+      </div>
+      <div class="prose">
+        <p>คลังคำถาม (Question Bank) ต่อคอร์สเก็บคำถามแบบเลือกตอบ (ข้อเดียว/หลายข้อถูก) โดยแต่ละครั้งที่ผู้เรียนกดสอบ ระบบสุ่มคำถามจำนวน N ข้อจากคลังทั้งหมด เพื่อลดการจำคำตอบส่งต่อกัน</p>
+        <p>เมื่อส่งคำตอบ: คะแนน = (จำนวนข้อถูก ÷ จำนวนข้อทั้งหมด) × 100 — ถ้า ≥ เกณฑ์ผ่าน ระบบตั้งสถานะคอร์สเป็น <b>Complete</b> ทันที ถ้าไม่ผ่านและยังเหลือสิทธิ์สอบซ้ำ ผู้เรียนกลับไปทบทวนวิดีโอแล้วสอบใหม่ได้</p>
+      </div>
+    </section>
+
+    <section id="schema">
+      <div class="sec-head">
+        <span class="sec-num">07</span>
+        <h2>โครงสร้างฐานข้อมูลหลัก</h2>
+        <p class="sec-desc">ตารางหลักที่ผูกความสัมพันธ์ ผู้ใช้ → คอร์ส → วิดีโอ → ข้อสอบ → ผลลัพธ์</p>
+      </div>
+      <div class="schema-grid">
+        <div class="entity">
+          <div class="entity-head">users</div>
+          <div class="entity-body">
+            <div><span class="fname">id</span><span>uuid</span></div>
+            <div><span class="fname">email</span><span>text unique</span></div>
+            <div><span class="fname">password_hash</span><span>text</span></div>
+            <div><span class="fname">role</span><span>member / admin</span></div>
+            <div><span class="fname">department</span><span>text null</span></div>
+          </div>
+        </div>
+        <div class="entity">
+          <div class="entity-head">courses</div>
+          <div class="entity-body">
+            <div><span class="fname">id</span><span>uuid</span></div>
+            <div><span class="fname">title</span><span>text</span></div>
+            <div><span class="fname">pass_score</span><span>int default 70</span></div>
+            <div><span class="fname">max_attempts</span><span>int</span></div>
+            <div><span class="fname">status</span><span>draft / published</span></div>
+          </div>
+        </div>
+        <div class="entity">
+          <div class="entity-head">lessons</div>
+          <div class="entity-body">
+            <div><span class="fname">id</span><span>uuid</span></div>
+            <div><span class="fname">course_id</span><span>fk → courses</span></div>
+            <div><span class="fname">video_url</span><span>text (hls .m3u8)</span></div>
+            <div><span class="fname">duration_sec</span><span>int</span></div>
+            <div><span class="fname">order_index</span><span>int</span></div>
+          </div>
+        </div>
+        <div class="entity">
+          <div class="entity-head">watch_progress</div>
+          <div class="entity-body">
+            <div><span class="fname">id</span><span>uuid</span></div>
+            <div><span class="fname">user_id</span><span>fk → users</span></div>
+            <div><span class="fname">lesson_id</span><span>fk → lessons</span></div>
+            <div><span class="fname">watched_sec</span><span>int</span></div>
+            <div><span class="fname">furthest_sec</span><span>int</span></div>
+            <div><span class="fname">is_completed</span><span>bool</span></div>
+          </div>
+        </div>
+        <div class="entity">
+          <div class="entity-head">questions / choices</div>
+          <div class="entity-body">
+            <div><span class="fname">id</span><span>uuid</span></div>
+            <div><span class="fname">course_id</span><span>fk → courses</span></div>
+            <div><span class="fname">text</span><span>text</span></div>
+            <div><span class="fname">choices</span><span>jsonb [{text, is_correct}]</span></div>
+          </div>
+        </div>
+        <div class="entity">
+          <div class="entity-head">quiz_attempts</div>
+          <div class="entity-body">
+            <div><span class="fname">id</span><span>uuid</span></div>
+            <div><span class="fname">user_id</span><span>fk → users</span></div>
+            <div><span class="fname">course_id</span><span>fk → courses</span></div>
+            <div><span class="fname">score_pct</span><span>numeric</span></div>
+            <div><span class="fname">passed</span><span>bool</span></div>
+            <div><span class="fname">attempt_no</span><span>int</span></div>
+            <div><span class="fname">submitted_at</span><span>timestamp</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="dashboard">
+      <div class="sec-head">
+        <span class="sec-num">08</span>
+        <h2>Dashboard สรุปผลสำหรับผู้ดูแล</h2>
+        <p class="sec-desc">ภาพรวมที่ผู้ดูแลต้องเห็นทันทีที่เข้าระบบ</p>
+      </div>
+      <div class="dash-mock">
+        <div class="kpi-row">
+          <div class="kpi"><div class="v tabnum">2,140</div><div class="l">ผู้ใช้ทั้งหมด</div></div>
+          <div class="kpi"><div class="v tabnum">38</div><div class="l">คอร์สที่เผยแพร่</div></div>
+          <div class="kpi"><div class="v tabnum">76%</div><div class="l">อัตราจบคอร์สเฉลี่ย</div></div>
+          <div class="kpi"><div class="v tabnum">81%</div><div class="l">คะแนนสอบเฉลี่ย</div></div>
+        </div>
+        <div class="bar-chart" style="margin-bottom:28px;">
+          <div class="bar" style="height:40%"><span>ม.ค.</span></div>
+          <div class="bar" style="height:55%"><span>ก.พ.</span></div>
+          <div class="bar" style="height:50%"><span>มี.ค.</span></div>
+          <div class="bar" style="height:70%"><span>เม.ย.</span></div>
+          <div class="bar" style="height:65%"><span>พ.ค.</span></div>
+          <div class="bar" style="height:88%"><span>มิ.ย.</span></div>
+        </div>
+      </div>
+      <div class="prose">
+        <p>ตัวชี้วัดที่ควรมีในเฟส MVP:</p>
+        <ul>
+          <li><b>Funnel ต่อคอร์ส</b> — ลงทะเบียน → เริ่มดู → ดูจบ → สอบ → ผ่าน เพื่อเห็นจุดที่คนหลุดออกมากที่สุด</li>
+          <li><b>อัตราจบคอร์สรายคอร์ส</b> เรียงจากต่ำสุด เพื่อไล่ตามคอร์สที่มีปัญหา</li>
+          <li><b>รายชื่อค้างเรียน/ค้างสอบ</b> พร้อมส่งออกเป็น Excel ให้ HR ติดตามตัวเป็นราย department</li>
+          <li><b>คะแนนเฉลี่ยและอัตราสอบผ่านครั้งแรก</b> บอกว่าเนื้อหาหรือข้อสอบยากเกินไปหรือไม่</li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="nonfunc">
+      <div class="sec-head">
+        <span class="sec-num">09</span>
+        <h2>ข้อกำหนดที่ไม่ใช่ฟังก์ชัน</h2>
+        <p class="sec-desc">Scale ที่ต้องรองรับ พื้นที่จัดเก็บโดยประมาณ และความปลอดภัยของเนื้อหา</p>
+      </div>
+      <div class="nf-grid">
+        <div class="nf-card">
+          <h4>ปริมาณผู้ใช้</h4>
+          <p>ออกแบบรองรับ 500–5,000 คน และคอร์สหลักสิบถึง ~100 คอร์ส — เพียงพอด้วยเซิร์ฟเวอร์แอปเดียวและ DB แยกอินสแตนซ์ ไม่จำเป็นต้อง scale แนวนอนตั้งแต่วันแรก</p>
+        </div>
+        <div class="nf-card">
+          <h4>พื้นที่จัดเก็บวิดีโอ (ตัวอย่างประมาณการ)</h4>
+          <p>วิดีโอ 1080p HLS ≈ 0.6–1 GB/ชม. หากมี 100 คอร์ส เฉลี่ยคอร์สละ 2 ชม. ≈ <span class="tabnum">120–200 GB</span> รวมทุกบิตเรต ควรเผื่อพื้นที่ 2–3 เท่าและวางแผน backup แยกดิสก์</p>
+        </div>
+        <div class="nf-card">
+          <h4>ป้องกันการดาวน์โหลด/แชร์ลิงก์</h4>
+          <p>ใช้ signed URL ที่หมดอายุไม่กี่นาทีต่อ segment วิดีโอ ผูกกับ session ผู้ใช้ ป้องกันการก็อปลิงก์ไปเปิดนอกระบบ</p>
+        </div>
+        <div class="nf-card">
+          <h4>ความปลอดภัยบัญชีผู้ใช้</h4>
+          <p>รหัสผ่าน hash ด้วย bcrypt/argon2, บังคับ HTTPS, จำกัดจำนวนครั้ง login ผิดพลาด (rate limit) ป้องกัน brute force</p>
+        </div>
+        <div class="nf-card">
+          <h4>ความพร้อมใช้งาน</h4>
+          <p>สำรองข้อมูล DB รายวัน และแยก process แปลงวิดีโอออกจาก API server เพื่อไม่ให้การอัปโหลดกระทบผู้เรียนที่กำลังใช้งาน</p>
+        </div>
+        <div class="nf-card">
+          <h4>Audit trail</h4>
+          <p>บันทึก log การแก้ไขคอร์ส/ข้อสอบ และการเปลี่ยนสถานะคะแนนของแอดมิน เผื่อกรณีต้องตรวจสอบย้อนหลัง</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="roadmap">
+      <div class="sec-head">
+        <span class="sec-num">10</span>
+        <h2>แผนดำเนินงาน</h2>
+        <p class="sec-desc">ลำดับการสร้างจริง ตั้งแต่โครงพื้นฐานจนถึงฟีเจอร์เสริม</p>
+      </div>
+
+      <div class="phase">
+        <div class="phase-num tabnum">0</div>
+        <div>
+          <h3>เตรียมโครงสร้าง <span class="dur">1–2 สัปดาห์</span></h3>
+          <ul>
+            <li>เตรียมเซิร์ฟเวอร์/Docker environment ที่บริษัท ออกแบบ schema ฐานข้อมูลฉบับสมบูรณ์</li>
+            <li>ตกลง design system หน้าตาเว็บ และ endpoint หลักของ API</li>
+          </ul>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="phase-num tabnum">1</div>
+        <div>
+          <h3>MVP <span class="dur">4–6 สัปดาห์</span></h3>
+          <ul>
+            <li>สมัคร/ล็อกอิน, แคตตาล็อกคอร์ส, อัปโหลด+เล่นวิดีโอพร้อมนับเวลาดูพื้นฐาน</li>
+            <li>ระบบข้อสอบและคำนวณผ่าน/ไม่ผ่าน, CMS จัดการคอร์ส/คำถามเบื้องต้น</li>
+          </ul>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="phase-num tabnum">2</div>
+        <div>
+          <h3>รายงานและความสมบูรณ์ <span class="dur">3–4 สัปดาห์</span></h3>
+          <ul>
+            <li>แดชบอร์ดพร้อมกราฟ, ส่งออกรายงาน Excel, ใบประกาศนียบัตร PDF</li>
+            <li>ปรับ pipeline แปลงวิดีโอเป็นหลายบิตเรตอัตโนมัติ, ระบบแจ้งเตือนอีเมล (คอร์สใหม่/ใกล้ครบกำหนด)</li>
+          </ul>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="phase-num tabnum">3</div>
+        <div>
+          <h3>ต่อยอด <span class="dur">ตามรอบใช้งานจริง</span></h3>
+          <ul>
+            <li>ปรับ performance ตามพฤติกรรมใช้งานจริง, เพิ่มสิทธิ์แบ่งตามแผนก</li>
+            <li>พิจารณาเชื่อม SSO/Active Directory หากต้องขยายผู้ใช้ทั้งบริษัท</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      Training Platform Blueprint — ฉบับร่างสำหรับหารือขอบเขตก่อนเริ่มพัฒนา
+    </footer>
+  </main>
+</div>
+</body>
+</html>
