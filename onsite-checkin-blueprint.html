@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Onsite Check-in Blueprint</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@500;600;700&family=Sarabun:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FBFAF7;
+    --surface:#FFFFFF;
+    --surface-alt:#F3F1EA;
+    --text:#1E2420;
+    --text-muted:#5C6660;
+    --border:#E4E1D7;
+    --accent:#2A6F6B;
+    --accent-strong:#1F5551;
+    --accent-soft:#E4EEEC;
+    --accent-2:#C9782F;
+    --accent-2-soft:#F6E8D8;
+    --success:#3D8361;
+    --success-soft:#E3F0E7;
+    --danger:#B23A3A;
+    --danger-soft:#F5E3E1;
+    --shadow: 0 1px 2px rgba(30,36,32,0.04), 0 8px 24px rgba(30,36,32,0.05);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#12161A;
+      --surface:#1A1F22;
+      --surface-alt:#20262A;
+      --text:#E7E9E6;
+      --text-muted:#9AA39D;
+      --border:#2B3236;
+      --accent:#57B0A6;
+      --accent-strong:#7BC7BE;
+      --accent-soft:rgba(87,176,166,0.14);
+      --accent-2:#E0954B;
+      --accent-2-soft:rgba(224,149,75,0.14);
+      --success:#5FB98A;
+      --success-soft:rgba(95,185,138,0.14);
+      --danger:#E07A7A;
+      --danger-soft:rgba(224,102,102,0.14);
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#12161A;
+    --surface:#1A1F22;
+    --surface-alt:#20262A;
+    --text:#E7E9E6;
+    --text-muted:#9AA39D;
+    --border:#2B3236;
+    --accent:#57B0A6;
+    --accent-strong:#7BC7BE;
+    --accent-soft:rgba(87,176,166,0.14);
+    --accent-2:#E0954B;
+    --accent-2-soft:rgba(224,149,75,0.14);
+    --success:#5FB98A;
+    --success-soft:rgba(95,185,138,0.14);
+    --danger:#E07A7A;
+    --danger-soft:rgba(224,102,102,0.14);
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
+  }
+
+  *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:"Sarabun","Noto Sans Thai",sans-serif;
+    font-size:16px;
+    line-height:1.75;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{
+    font-family:"Kanit","Noto Sans Thai",sans-serif;
+    text-wrap:balance;
+    color:var(--text);
+    line-height:1.3;
+  }
+  a{color:var(--accent);}
+  code, .mono{ font-family:"JetBrains Mono", ui-monospace, monospace; }
+  .tabnum{ font-variant-numeric: tabular-nums; }
+
+  .shell{
+    display:grid;
+    grid-template-columns: 260px minmax(0,1fr);
+    max-width:1280px;
+    margin:0 auto;
+  }
+  @media (max-width: 880px){
+    .shell{ grid-template-columns: 1fr; }
+  }
+
+  .toc{
+    position:sticky; top:0; align-self:start; height:100vh; overflow-y:auto;
+    padding:32px 20px 32px 28px; border-right:1px solid var(--border);
+  }
+  @media (max-width: 880px){
+    .toc{ position:static; height:auto; border-right:none; border-bottom:1px solid var(--border); padding:20px 24px; overflow-x:auto; }
+    .toc ol{ display:flex; gap:18px; white-space:nowrap; }
+    .toc ol li{ margin:0; }
+  }
+  .toc-brand{ display:flex; align-items:center; gap:10px; margin-bottom:22px; }
+  .toc-mark{
+    width:30px;height:30px;border-radius:8px; background:var(--accent); color:var(--surface);
+    display:flex; align-items:center; justify-content:center;
+    font-family:"Kanit"; font-weight:700; font-size:15px; flex:none;
+  }
+  .toc-brand span{ font-family:"Kanit"; font-weight:600; font-size:15px; color:var(--text); }
+  .toc ol{ list-style:none; margin:0; padding:0; }
+  .toc li{ margin-bottom:6px; }
+  .toc a{
+    text-decoration:none; color:var(--text-muted); font-size:13.5px; display:block;
+    padding:6px 10px; border-radius:6px; transition: background .15s, color .15s;
+  }
+  .toc a:hover{ background:var(--surface-alt); color:var(--text); }
+
+  main{ padding:0 0 80px; min-width:0; }
+  .hero{ padding:56px 48px 40px; border-bottom:1px solid var(--border); }
+  @media (max-width:880px){ .hero{ padding:40px 24px 32px; } }
+  .eyebrow{
+    display:inline-flex; align-items:center; gap:8px; font-size:12.5px; font-weight:600;
+    letter-spacing:.06em; color:var(--accent); text-transform:uppercase; margin-bottom:14px;
+  }
+  .eyebrow::before{ content:""; width:7px; height:7px; border-radius:50%; background:var(--accent); display:inline-block; }
+  .hero h1{ font-size:clamp(28px,4vw,40px); font-weight:700; margin:0 0 14px; }
+  .hero p.lede{ font-size:17px; color:var(--text-muted); max-width:640px; margin:0 0 22px; }
+  .hero-meta{ display:flex; flex-wrap:wrap; gap:10px; }
+  .chip{
+    font-size:12.5px; padding:5px 12px; border-radius:100px; background:var(--surface-alt);
+    border:1px solid var(--border); color:var(--text-muted);
+  }
+
+  section{ padding:44px 48px; border-bottom:1px solid var(--border); }
+  @media (max-width:880px){ section{ padding:36px 24px; } }
+  section:last-child{ border-bottom:none; }
+
+  .sec-head{ margin-bottom:24px; max-width:720px; }
+  .sec-num{
+    font-family:"JetBrains Mono"; font-size:12.5px; color:var(--accent-2);
+    font-weight:500; letter-spacing:.04em; display:block; margin-bottom:8px;
+  }
+  section h2{ font-size:24px; font-weight:600; margin:0 0 8px; }
+  section .sec-desc{ color:var(--text-muted); font-size:15px; margin:0; }
+
+  .prose{ max-width:720px; }
+  .prose p{ margin:0 0 14px; }
+  .prose ul{ margin:0 0 14px; padding-left:22px; }
+  .prose li{ margin-bottom:6px; }
+
+  .journey{
+    display:flex; flex-direction:column; gap:0; border:1px solid var(--border);
+    border-radius:12px; overflow:hidden; background:var(--surface);
+  }
+  .journey-step{ display:grid; grid-template-columns:40px 1fr; gap:16px; padding:16px 18px; border-bottom:1px solid var(--border); }
+  .journey-step:last-child{ border-bottom:none; }
+  .journey-dot{
+    width:28px; height:28px; border-radius:50%; background:var(--accent-soft); color:var(--accent);
+    display:flex; align-items:center; justify-content:center; font-family:"JetBrains Mono"; font-size:12px; font-weight:600;
+  }
+  .journey-step h4{ margin:0 0 4px; font-size:15px; font-weight:600; }
+  .journey-step p{ margin:0; font-size:14px; color:var(--text-muted); }
+  .journey-block + .journey-block{ margin-top:20px; }
+  .journey-label{
+    font-size:13px; font-weight:600; color:var(--text-muted); text-transform:uppercase;
+    letter-spacing:.05em; margin:0 0 10px;
+  }
+
+  .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+  @media (max-width:720px){ .grid2{ grid-template-columns:1fr; } }
+  .panel{ border:1px solid var(--border); border-radius:12px; background:var(--surface); padding:22px 22px 8px; }
+  .panel h3{ font-size:16px; margin:0 0 4px; display:flex; align-items:center; gap:8px; }
+  .panel .role-tag{ font-size:11px; font-weight:600; padding:3px 9px; border-radius:100px; }
+  .role-tag.member{ background:var(--accent-soft); color:var(--accent-strong); }
+  .role-tag.admin{ background:var(--accent-2-soft); color:var(--accent-2); }
+  .panel .panel-sub{ font-size:13.5px; color:var(--text-muted); margin:0 0 16px; }
+  .feat-list{ list-style:none; margin:0; padding:0; }
+  .feat-list li{ padding:12px 0; border-top:1px solid var(--border); font-size:14.5px; }
+  .feat-list li:first-child{ border-top:none; }
+  .feat-list b{ display:block; margin-bottom:2px; font-weight:600; }
+  .feat-list span{ color:var(--text-muted); font-size:13.5px; }
+
+  .diagram-wrap{ border:1px solid var(--border); border-radius:12px; background:var(--surface); padding:20px; overflow-x:auto; }
+  .diagram-wrap svg{ display:block; min-width:680px; }
+
+  .stack-table{ width:100%; border-collapse:collapse; margin-top:20px; font-size:14px; }
+  .stack-table th{
+    text-align:left; font-family:"Kanit"; font-weight:600; font-size:13px; color:var(--text-muted);
+    text-transform:uppercase; letter-spacing:.03em; padding:8px 14px; border-bottom:1px solid var(--border);
+  }
+  .stack-table td{ padding:12px 14px; border-bottom:1px solid var(--border); vertical-align:top; }
+  .stack-table tr:last-child td{ border-bottom:none; }
+  .stack-table .layer{ font-weight:600; white-space:nowrap; }
+  .stack-table .why{ color:var(--text-muted); }
+
+  .mech-flow{ display:flex; flex-wrap:wrap; gap:12px; align-items:stretch; margin-bottom:22px; }
+  .mech-card{ flex:1 1 150px; border:1px solid var(--border); border-radius:10px; background:var(--surface); padding:14px 16px; }
+  .mech-card .k{ font-family:"JetBrains Mono"; font-size:11.5px; color:var(--accent); margin-bottom:6px; display:block; }
+  .mech-card p{ margin:0; font-size:13.5px; color:var(--text-muted); }
+  .arrow{ align-self:center; color:var(--border); font-size:18px; }
+  @media (max-width:720px){ .arrow{ display:none; } }
+
+  .callout{
+    border-left:3px solid var(--accent-2); background:var(--accent-2-soft); border-radius:0 10px 10px 0;
+    padding:14px 18px; font-size:14px; color:var(--text); max-width:720px;
+  }
+  .callout b{ color:var(--accent-2); }
+
+  .rule-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:20px; }
+  @media (max-width:720px){ .rule-grid{ grid-template-columns:1fr 1fr; } }
+  .rule-card{ border:1px solid var(--border); border-radius:10px; background:var(--surface); padding:16px; text-align:left; }
+  .rule-card .num{ font-family:"JetBrains Mono"; font-size:22px; font-weight:500; color:var(--accent); }
+  .rule-card .lbl{ font-size:12.5px; color:var(--text-muted); margin-top:4px; }
+
+  .schema-grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  @media (max-width:780px){ .schema-grid{ grid-template-columns:1fr; } }
+  .entity{ border:1px solid var(--border); border-radius:10px; overflow:hidden; background:var(--surface); }
+  .entity-head{
+    background:var(--surface-alt); padding:9px 14px; font-family:"JetBrains Mono"; font-size:13px;
+    font-weight:500; border-bottom:1px solid var(--border); color:var(--accent-strong);
+  }
+  .entity-body{ padding:10px 14px 12px; font-family:"JetBrains Mono"; font-size:12.5px; color:var(--text-muted); }
+  .entity-body div{ padding:3px 0; display:flex; justify-content:space-between; gap:10px; }
+  .entity-body .fname{ color:var(--text); }
+
+  .dash-mock{ border:1px solid var(--border); border-radius:12px; background:var(--surface); padding:20px; margin-bottom:20px; }
+  .kpi-row{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:16px; }
+  @media (max-width:720px){ .kpi-row{ grid-template-columns:1fr 1fr; } }
+  .kpi{ border:1px solid var(--border); border-radius:8px; padding:12px 14px; background:var(--surface-alt); }
+  .kpi .v{ font-family:"JetBrains Mono"; font-size:20px; font-weight:500; }
+  .kpi .l{ font-size:12px; color:var(--text-muted); margin-top:2px; }
+  .bar-chart{ display:flex; align-items:flex-end; gap:8px; height:110px; padding:0 4px; }
+  .bar-chart .bar{ flex:1; background:var(--accent); border-radius:4px 4px 0 0; opacity:.85; position:relative; }
+  .bar-chart .bar.b2{ background:var(--accent-2); }
+  .bar-chart .bar span{ position:absolute; bottom:-20px; left:0; right:0; text-align:center; font-size:10.5px; color:var(--text-muted); }
+  .legend{ display:flex; gap:16px; font-size:12.5px; color:var(--text-muted); margin-top:26px; }
+  .legend .dot{ width:9px; height:9px; border-radius:2px; display:inline-block; margin-right:6px; }
+
+  .nf-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+  @media (max-width:780px){ .nf-grid{ grid-template-columns:1fr 1fr; } }
+  @media (max-width:520px){ .nf-grid{ grid-template-columns:1fr; } }
+  .nf-card{ border:1px solid var(--border); border-radius:10px; padding:16px; background:var(--surface); }
+  .nf-card h4{ margin:0 0 6px; font-size:14.5px; font-family:"Kanit"; font-weight:600; }
+  .nf-card p{ margin:0; font-size:13px; color:var(--text-muted); }
+
+  .phase{ display:grid; grid-template-columns:64px 1fr; gap:18px; padding:22px 0; border-top:1px solid var(--border); }
+  .phase:first-child{ border-top:none; padding-top:0; }
+  .phase-num{ font-family:"Kanit"; font-weight:700; font-size:26px; color:var(--border); }
+  .phase h3{ font-size:17px; margin:0 0 4px; }
+  .phase .dur{
+    font-family:"JetBrains Mono"; font-size:12px; color:var(--accent); background:var(--accent-soft);
+    padding:3px 9px; border-radius:100px; margin-left:10px;
+  }
+  .phase ul{ margin:10px 0 0; padding-left:20px; font-size:14px; color:var(--text-muted); }
+  .phase li{ margin-bottom:4px; }
+
+  /* Ticket mock */
+  .ticket{
+    display:flex; border:1px dashed var(--border); border-radius:12px; background:var(--surface);
+    max-width:520px; overflow:hidden;
+  }
+  .ticket-main{ padding:18px 20px; flex:1; }
+  .ticket-main .ev{ font-family:"Kanit"; font-weight:600; font-size:15px; margin-bottom:4px; }
+  .ticket-main .who{ font-size:13.5px; color:var(--text-muted); margin-bottom:10px; }
+  .ticket-main .meta{ font-size:12px; color:var(--text-muted); display:flex; gap:14px; }
+  .ticket-qr{
+    width:96px; background:var(--surface-alt); display:flex; align-items:center; justify-content:center;
+    border-left:1px dashed var(--border); flex:none;
+  }
+  .ticket-qr .qr-mock{
+    width:60px; height:60px; background:
+      repeating-linear-gradient(0deg, var(--text) 0 4px, transparent 4px 8px),
+      repeating-linear-gradient(90deg, var(--text) 0 4px, transparent 4px 8px);
+    background-blend-mode: multiply; opacity:.7; border-radius:4px;
+  }
+
+  footer{ padding:32px 48px; color:var(--text-muted); font-size:13px; }
+  @media (max-width:880px){ footer{ padding:24px; } }
+</style>
+
+</head>
+<body>
+<div class="shell">
+  <nav class="toc">
+    <div class="toc-brand">
+      <div class="toc-mark">EC</div>
+      <span>Event Check-in</span>
+    </div>
+    <ol>
+      <li><a href="#overview">ภาพรวมระบบ</a></li>
+      <li><a href="#roles">บทบาทและ Flow</a></li>
+      <li><a href="#features">ฟีเจอร์หลัก</a></li>
+      <li><a href="#stack">สถาปัตยกรรม &amp; Stack</a></li>
+      <li><a href="#checkin">กลไก Check-in</a></li>
+      <li><a href="#cert">ระบบใบประกาศนียบัตร</a></li>
+      <li><a href="#schema">โครงสร้างข้อมูล</a></li>
+      <li><a href="#dashboard">Dashboard ผู้ดูแล</a></li>
+      <li><a href="#nonfunc">Scale &amp; ความปลอดภัย</a></li>
+      <li><a href="#roadmap">แผนดำเนินงาน</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <div class="hero">
+      <div class="eyebrow">System Blueprint</div>
+      <h1>ระบบลงทะเบียนและ Check-in อบรม Onsite</h1>
+      <p class="lede">เปิดให้ผู้สนใจ Pre-register ผ่านหน้าเว็บโดยไม่ต้องล็อกอิน รับ QR ตั๋วทางอีเมล เช็คอินหน้างานด้วยการสแกนหรือค้นชื่อ แล้วให้แอดมินออกใบประกาศนียบัตรให้ผู้เข้าร่วมจริงหลังจบงาน</p>
+      <div class="hero-meta">
+        <span class="chip">ลงทะเบียนแบบไม่ต้องมีบัญชี</span>
+        <span class="chip">Check-in: QR + ค้นหาชื่อ</span>
+        <span class="chip">Certificate: แอดมินกดออกหลังจบงาน</span>
+        <span class="chip">ระบบแยกอิสระจาก Training Management System</span>
+      </div>
+    </div>
+
+    <section id="overview">
+      <div class="sec-head">
+        <span class="sec-num">01</span>
+        <h2>ภาพรวมระบบ</h2>
+        <p class="sec-desc">ขอบเขตหลักและกติกาที่ต้องยึดตลอดการออกแบบ</p>
+      </div>
+      <div class="prose">
+        <p>ระบบนี้ดูแลวงจรของ "งานอบรม/สัมมนา Onsite" หนึ่งงาน ตั้งแต่เปิดรับสมัครจนถึงออกใบประกาศนียบัตร โดยแบ่งเป็นฝั่ง <b>ผู้ลงทะเบียน (Attendee)</b> ที่ไม่ต้องสร้างบัญชีผู้ใช้ และฝั่ง <b>ผู้ดูแล (Admin/CMS)</b> ที่ต้องล็อกอินเพื่อจัดการงานและหน้างาน</p>
+        <p>กติกาหลักที่ล็อกไว้ตั้งแต่ต้น:</p>
+        <ul>
+          <li>ผู้สนใจ <b>ลงทะเบียนด้วยชื่อ + อีเมล</b> ไม่ต้องสมัครสมาชิก ระบบนี้เป็นอิสระจาก Training Management System</li>
+          <li>เช็คอินหน้างานทำได้สองทาง คือ <b>สแกน QR</b> จากตั๋วในอีเมล หรือ <b>ค้นหาชื่อ</b> เมื่อผู้เข้าร่วมไม่มี QR ติดตัว</li>
+          <li>ใบประกาศนียบัตร <b>ไม่ออกอัตโนมัติ</b> — แอดมินเป็นผู้เลือกรายชื่อที่เข้าร่วมจริงแล้วกดออกให้หลังงานจบ</li>
+          <li>ข้อมูลผู้ลงทะเบียนเป็น PII (ชื่อ อีเมล เบอร์โทร) ต้องมี privacy notice ตอนลงทะเบียนตามหลัก PDPA</li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="roles">
+      <div class="sec-head">
+        <span class="sec-num">02</span>
+        <h2>บทบาทผู้ใช้และ Flow การทำงาน</h2>
+        <p class="sec-desc">เส้นทางของผู้เข้าร่วมหนึ่งงาน และงานประจำของแอดมิน</p>
+      </div>
+
+      <div class="journey-block">
+        <p class="journey-label">Attendee Journey — จากลงทะเบียนถึงได้ใบประกาศ</p>
+        <div class="journey">
+          <div class="journey-step">
+            <div class="journey-dot">1</div>
+            <div><h4>Pre-register ผ่านหน้าเว็บ</h4><p>กรอกชื่อ-นามสกุล อีเมล เบอร์โทร บริษัท/แผนก ไม่ต้องสร้างบัญชี</p></div>
+          </div>
+          <div class="journey-step">
+            <div class="journey-dot">2</div>
+            <div><h4>รับอีเมลยืนยันพร้อม QR ตั๋ว</h4><p>แนบ QR code เฉพาะบุคคล + รายละเอียดงาน วันที่ สถานที่</p></div>
+          </div>
+          <div class="journey-step">
+            <div class="journey-dot">3</div>
+            <div><h4>เช็คอินหน้างาน</h4><p>ยื่น QR ให้สแกน หรือแจ้งชื่อให้สตาฟค้นหาแทน</p></div>
+          </div>
+          <div class="journey-step">
+            <div class="journey-dot">4</div>
+            <div><h4>เข้าร่วมกิจกรรม</h4><p>สถานะในระบบเปลี่ยนเป็น "เช็คอินแล้ว" พร้อมเวลาที่เข้างาน</p></div>
+          </div>
+          <div class="journey-step">
+            <div class="journey-dot">5</div>
+            <div><h4>รับใบประกาศนียบัตรหลังงานจบ</h4><p>อีเมลแนบ PDF อัตโนมัติเมื่อแอดมินกดออกให้ พร้อมลิงก์ดาวน์โหลดซ้ำได้</p></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="journey-block">
+        <p class="journey-label">Admin Journey — เตรียมงาน วันงาน และหลังงาน</p>
+        <div class="journey">
+          <div class="journey-step">
+            <div class="journey-dot">1</div>
+            <div><h4>สร้างงานอบรม</h4><p>ตั้งชื่อ วันเวลา สถานที่ จำนวนที่นั่งสูงสุด เปิด/ปิดรับสมัคร</p></div>
+          </div>
+          <div class="journey-step">
+            <div class="journey-dot">2</div>
+            <div><h4>เผยแพร่ลิงก์ลงทะเบียน</h4><p>แชร์ลิงก์หน้า pre-register ให้กลุ่มเป้าหมาย ติดตามยอดสมัครแบบเรียลไทม์</p></div>
+          </div>
+          <div class="journey-step">
+            <div class="journey-dot">3</div>
+            <div><h4>เปิด Check-in Console วันงาน</h4><p>ใช้แท็บเล็ต/โน้ตบุ๊กหน้างาน สแกน QR หรือค้นชื่อ กดเช็คอินทีละคน</p></div>
+          </div>
+          <div class="journey-step">
+            <div class="journey-dot">4</div>
+            <div><h4>ปิดงานและออกใบประกาศ</h4><p>เลือกรายชื่อที่เช็คอินจริง กดออกใบประกาศแบบ bulk ระบบส่งอีเมลให้ทุกคน</p></div>
+          </div>
+          <div class="journey-step">
+            <div class="journey-dot">5</div>
+            <div><h4>ดูสรุปผลผ่านแดชบอร์ด</h4><p>ยอดลงทะเบียน เทียบยอดเช็คอินจริง อัตรา no-show ต่องาน</p></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="features">
+      <div class="sec-head">
+        <span class="sec-num">03</span>
+        <h2>ฟีเจอร์หลักแบ่งตามฝั่งผู้ใช้</h2>
+        <p class="sec-desc">ขอบเขตฟีเจอร์ของ MVP</p>
+      </div>
+      <div class="grid2">
+        <div class="panel">
+          <h3>ฝั่งผู้ลงทะเบียน <span class="role-tag member">Public — ไม่ต้อง Login</span></h3>
+          <p class="panel-sub">หน้าเว็บสาธารณะต่องานแต่ละงาน</p>
+          <ul class="feat-list">
+            <li><b>หน้า Pre-register ต่องาน</b><span>ฟอร์มสั้น กรอกครั้งเดียวจบ พร้อม consent PDPA</span></li>
+            <li><b>อีเมลยืนยัน + QR ตั๋ว</b><span>แนบไฟล์ QR และปฏิทินนัดหมาย (.ics)</span></li>
+            <li><b>หน้าตรวจสอบสถานะ/ดาวน์โหลดใบประกาศ</b><span>กรอกอีเมล + รหัสอ้างอิงเพื่อดาวน์โหลดซ้ำภายหลัง</span></li>
+          </ul>
+        </div>
+        <div class="panel">
+          <h3>ฝั่งผู้ดูแล <span class="role-tag admin">Admin / CMS</span></h3>
+          <p class="panel-sub">ต้องล็อกอิน ใช้จัดการทุกงาน</p>
+          <ul class="feat-list">
+            <li><b>จัดการงานอบรม</b><span>สร้าง/แก้ไข/ปิดรับสมัคร กำหนดโควตาที่นั่ง</span></li>
+            <li><b>Check-in Console</b><span>สแกน QR ด้วยกล้อง หรือเครื่องยิงบาร์โค้ด + ช่องค้นชื่อสำรอง</span></li>
+            <li><b>จัดการรายชื่อผู้ลงทะเบียน</b><span>ดูสถานะ ลงทะเบียน/เช็คอินแล้ว/ไม่มา แก้ไข/ยกเลิกรายชื่อ</span></li>
+            <li><b>ออกใบประกาศนียบัตรแบบ Bulk</b><span>เลือกรายชื่อ กดออกครั้งเดียว ระบบ generate PDF และส่งอีเมลให้ทุกคน</span></li>
+            <li><b>แดชบอร์ดสรุปผล</b><span>ลงทะเบียน vs เช็คอินจริง อัตรา no-show export Excel</span></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="stack">
+      <div class="sec-head">
+        <span class="sec-num">04</span>
+        <h2>สถาปัตยกรรมระบบและ Tech Stack ที่แนะนำ</h2>
+        <p class="sec-desc">ใช้แนวคิดเดียวกับ Training Management System เพื่อให้ทีมดูแลสองระบบด้วยชุดทักษะเดิม</p>
+      </div>
+
+      <div class="diagram-wrap">
+        <svg viewBox="0 0 960 380" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="แผนภาพสถาปัตยกรรมระบบ Check-in">
+          <defs>
+            <marker id="arrow2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="var(--text-muted)"></path>
+            </marker>
+          </defs>
+          <style>
+            .box{ fill:var(--surface); stroke:var(--border); stroke-width:1.5; }
+            .box-accent{ fill:var(--accent-soft); stroke:var(--accent); stroke-width:1.5; }
+            .lbl{ font-family:"Kanit","Sarabun",sans-serif; font-size:13.5px; fill:var(--text); font-weight:600; }
+            .sub{ font-family:"JetBrains Mono",monospace; font-size:10.5px; fill:var(--text-muted); }
+            .edge{ stroke:var(--text-muted); stroke-width:1.4; fill:none; marker-end:url(#arrow2); }
+          </style>
+
+          <rect x="20" y="40" width="170" height="60" rx="10" class="box"></rect>
+          <text x="105" y="65" text-anchor="middle" class="lbl">หน้า Pre-register</text>
+          <text x="105" y="82" text-anchor="middle" class="sub">ผู้ลงทะเบียน (ไม่ล็อกอิน)</text>
+
+          <rect x="20" y="150" width="170" height="60" rx="10" class="box"></rect>
+          <text x="105" y="175" text-anchor="middle" class="lbl">Check-in Console</text>
+          <text x="105" y="192" text-anchor="middle" class="sub">แท็บเล็ต/โน้ตบุ๊กหน้างาน</text>
+
+          <rect x="20" y="260" width="170" height="60" rx="10" class="box"></rect>
+          <text x="105" y="285" text-anchor="middle" class="lbl">Admin Dashboard</text>
+          <text x="105" y="302" text-anchor="middle" class="sub">จัดงาน / ออกใบประกาศ</text>
+
+          <path d="M190,70 H270 V182 H330" class="edge"></path>
+          <path d="M190,180 H330" class="edge"></path>
+          <path d="M190,290 H270 V182 H330" class="edge"></path>
+
+          <rect x="330" y="150" width="160" height="64" rx="10" class="box-accent"></rect>
+          <text x="410" y="176" text-anchor="middle" class="lbl">API Server</text>
+          <text x="410" y="194" text-anchor="middle" class="sub">Node.js (NestJS)</text>
+
+          <path d="M490,168 H700" class="edge"></path>
+          <path d="M410,150 V60 H700" class="edge"></path>
+          <path d="M490,196 H600 V280 H700" class="edge"></path>
+
+          <rect x="700" y="30" width="220" height="56" rx="10" class="box"></rect>
+          <text x="810" y="54" text-anchor="middle" class="lbl">PostgreSQL</text>
+          <text x="810" y="72" text-anchor="middle" class="sub">งาน / ผู้ลงทะเบียน / ใบประกาศ</text>
+
+          <rect x="700" y="140" width="220" height="56" rx="10" class="box"></rect>
+          <text x="810" y="164" text-anchor="middle" class="lbl">Email/SMTP Service</text>
+          <text x="810" y="182" text-anchor="middle" class="sub">ส่ง QR ตั๋ว + ใบประกาศ</text>
+
+          <rect x="700" y="250" width="220" height="56" rx="10" class="box"></rect>
+          <text x="810" y="274" text-anchor="middle" class="lbl">PDF Render Worker</text>
+          <text x="810" y="292" text-anchor="middle" class="sub">Puppeteer — สร้างใบประกาศ</text>
+
+          <path d="M810,306 V330 H600 V214" class="edge"></path>
+          <text x="700" y="330" class="sub">แจ้งผลออกใบประกาศกลับ API</text>
+        </svg>
+      </div>
+
+      <table class="stack-table">
+        <thead><tr><th>ชั้นระบบ</th><th>เทคโนโลยีที่แนะนำ</th><th>เหตุผล</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="layer">Frontend</td>
+            <td class="mono">Next.js + TypeScript</td>
+            <td class="why">หน้า pre-register ต้องโหลดเร็วบนมือถือ (คนกดจากอีเมล/โซเชียล) SSR ช่วยเรื่อง SEO และความเร็วหน้าแรก</td>
+          </tr>
+          <tr>
+            <td class="layer">Backend API</td>
+            <td class="mono">Node.js (NestJS)</td>
+            <td class="why">ใช้โครงเดียวกับ Training Management System ทีมดูแลด้วยชุดทักษะเดิม แยกโมดูล Event / Registration / Certificate ชัดเจน</td>
+          </tr>
+          <tr>
+            <td class="layer">ฐานข้อมูล</td>
+            <td class="mono">PostgreSQL</td>
+            <td class="why">Query สรุปยอดลงทะเบียน/เช็คอินต่องานได้ตรงไปตรงมา ไม่ซับซ้อนเท่าระบบ LMS</td>
+          </tr>
+          <tr>
+            <td class="layer">QR Code</td>
+            <td class="mono">qrcode (server-side gen)</td>
+            <td class="why">สร้าง QR ที่ผูกกับ token เฉพาะการลงทะเบียนแต่ละครั้ง ฝัง PNG ลงอีเมลได้ตรง ไม่ต้องพึ่งบริการภายนอก</td>
+          </tr>
+          <tr>
+            <td class="layer">PDF ใบประกาศ</td>
+            <td class="mono">Puppeteer (HTML → PDF)</td>
+            <td class="why">ออกแบบเทมเพลตใบประกาศเป็น HTML/CSS ธรรมดา ปรับหน้าตาง่าย ไม่ต้องเรียนรู้ library PDF เฉพาะทาง</td>
+          </tr>
+          <tr>
+            <td class="layer">อีเมล</td>
+            <td class="mono">SMTP บริษัท / Nodemailer</td>
+            <td class="why">ใช้เซิร์ฟเวอร์อีเมลที่บริษัทมีอยู่แล้ว ลดการพึ่งพาบริการภายนอกและค่าใช้จ่ายเพิ่ม</td>
+          </tr>
+          <tr>
+            <td class="layer">Deploy</td>
+            <td class="mono">Docker Compose</td>
+            <td class="why">รันอยู่บนเซิร์ฟเวอร์เดียวกับ Training Management System ได้ แชร์ pattern การดูแลระบบเดียวกัน</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="checkin">
+      <div class="sec-head">
+        <span class="sec-num">05</span>
+        <h2>กลไก Check-in หน้างาน</h2>
+        <p class="sec-desc">ผสมสองวิธี ให้เร็วเมื่อมี QR และไม่ติดขัดเมื่อผู้เข้าร่วมลืมตั๋ว</p>
+      </div>
+
+      <div class="ticket" style="margin-bottom:24px;">
+        <div class="ticket-main">
+          <div class="ev">Workshop: Data Literacy for Retail</div>
+          <div class="who">สมชาย ใจดี · somchai@company.com</div>
+          <div class="meta"><span>19 ก.ย. 2569</span><span>09:00–16:00</span><span>ห้องประชุมชั้น 5</span></div>
+        </div>
+        <div class="ticket-qr"><div class="qr-mock"></div></div>
+      </div>
+
+      <div class="mech-flow">
+        <div class="mech-card"><span class="k">01 · มี QR</span><p>สตาฟสแกน QR ด้วยกล้องมือถือ/แท็บเล็ต หรือเครื่องยิงบาร์โค้ด USB ระบบจับคู่ token กับรายชื่อทันที</p></div>
+        <div class="arrow">→</div>
+        <div class="mech-card"><span class="k">02 · ไม่มี QR</span><p>สตาฟพิมพ์ค้นหาชื่อในคอนโซล ระบบค้นแบบ fuzzy จากรายชื่อที่ลงทะเบียนงานนั้น แล้วกดเช็คอินแทน</p></div>
+        <div class="arrow">→</div>
+        <div class="mech-card"><span class="k">03 · กันซ้ำ</span><p>ถ้า token/ชื่อถูกเช็คอินไปแล้ว ระบบแจ้งเตือน "เช็คอินแล้วเมื่อ hh:mm" กันการสแกนซ้ำโดยไม่ตั้งใจ</p></div>
+        <div class="arrow">→</div>
+        <div class="mech-card"><span class="k">04 · เรียลไทม์</span><p>ตัวนับ "ลงทะเบียน / เช็คอินแล้ว" หน้าคอนโซลอัปเดตทันที ให้สตาฟหน้างานประเมินจำนวนที่ยังไม่มาได้</p></div>
+      </div>
+      <div class="callout">
+        <b>ทางเลือกฮาร์ดแวร์:</b> คอนโซล check-in เป็นหน้าเว็บธรรมดา ใช้กล้องมือถือ/แท็บเล็ตสแกนได้เลยไม่ต้องซื้ออุปกรณ์เพิ่ม แต่ถ้ามีเครื่องยิงบาร์โค้ด USB อยู่แล้ว เสียบใช้ได้ทันทีเพราะเครื่องยิงทำงานเหมือนคีย์บอร์ดพิมพ์ token ใส่ช่องค้นหา
+      </div>
+    </section>
+
+    <section id="cert">
+      <div class="sec-head">
+        <span class="sec-num">06</span>
+        <h2>ระบบใบประกาศนียบัตร</h2>
+        <p class="sec-desc">แอดมินควบคุมทั้งหมด ออกให้เฉพาะคนที่เช็คอินจริง</p>
+      </div>
+      <div class="rule-grid">
+        <div class="rule-card"><div class="num">Manual</div><div class="lbl">แอดมินเลือกรายชื่อแล้วกดออกเอง ไม่ auto</div></div>
+        <div class="rule-card"><div class="num">Bulk</div><div class="lbl">ออกใบประกาศให้หลายคนพร้อมกันในคลิกเดียว</div></div>
+        <div class="rule-card"><div class="num">Reissue</div><div class="lbl">ดาวน์โหลดซ้ำได้ด้วยอีเมล + รหัสอ้างอิงใบ</div></div>
+      </div>
+      <div class="prose">
+        <p>หลังงานจบ แอดมินเปิดรายชื่อผู้ลงทะเบียนของงานนั้น กรองเฉพาะสถานะ "เช็คอินแล้ว" เลือกทั้งหมดหรือบางส่วน แล้วกด "ออกใบประกาศนียบัตร" ระบบจะ:</p>
+        <ul>
+          <li>Render PDF จากเทมเพลต (โลโก้บริษัท ชื่อ-นามสกุล ชื่องาน วันที่ เลขที่ใบรับรองที่ไม่ซ้ำกัน)</li>
+          <li>ส่งอีเมลแนบ PDF ให้ผู้เข้าร่วมทุกคนที่เลือกโดยอัตโนมัติ</li>
+          <li>เก็บสำเนาไว้ในระบบ ให้ผู้เข้าร่วมกลับมาดาวน์โหลดซ้ำได้ภายหลังด้วยอีเมล + รหัสอ้างอิง โดยไม่ต้องรบกวนแอดมิน</li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="schema">
+      <div class="sec-head">
+        <span class="sec-num">07</span>
+        <h2>โครงสร้างฐานข้อมูลหลัก</h2>
+        <p class="sec-desc">งาน → ผู้ลงทะเบียน → เช็คอิน → ใบประกาศนียบัตร</p>
+      </div>
+      <div class="schema-grid">
+        <div class="entity">
+          <div class="entity-head">events</div>
+          <div class="entity-body">
+            <div><span class="fname">id</span><span>uuid</span></div>
+            <div><span class="fname">title</span><span>text</span></div>
+            <div><span class="fname">location</span><span>text</span></div>
+            <div><span class="fname">start_at / end_at</span><span>timestamp</span></div>
+            <div><span class="fname">capacity</span><span>int</span></div>
+            <div><span class="fname">status</span><span>draft/open/closed</span></div>
+          </div>
+        </div>
+        <div class="entity">
+          <div class="entity-head">registrations</div>
+          <div class="entity-body">
+            <div><span class="fname">id</span><span>uuid</span></div>
+            <div><span class="fname">event_id</span><span>fk → events</span></div>
+            <div><span class="fname">full_name</span><span>text</span></div>
+            <div><span class="fname">email</span><span>text</span></div>
+            <div><span class="fname">phone</span><span>text null</span></div>
+            <div><span class="fname">qr_token</span><span>text unique</span></div>
+            <div><span class="fname">registered_at</span><span>timestamp</span></div>
+          </div>
+        </div>
+        <div class="entity">
+          <div class="entity-head">check_ins</div>
+          <div class="entity-body">
+            <div><span class="fname">id</span><span>uuid</span></div>
+            <div><span class="fname">registration_id</span><span>fk → registrations</span></div>
+            <div><span class="fname">method</span><span>qr / manual</span></div>
+            <div><span class="fname">checked_in_at</span><span>timestamp</span></div>
+            <div><span class="fname">checked_in_by</span><span>fk → admin_users</span></div>
+          </div>
+        </div>
+        <div class="entity">
+          <div class="entity-head">certificates</div>
+          <div class="entity-body">
+            <div><span class="fname">id</span><span>uuid</span></div>
+            <div><span class="fname">registration_id</span><span>fk → registrations</span></div>
+            <div><span class="fname">cert_no</span><span>text unique</span></div>
+            <div><span class="fname">pdf_url</span><span>text</span></div>
+            <div><span class="fname">issued_at</span><span>timestamp</span></div>
+            <div><span class="fname">issued_by</span><span>fk → admin_users</span></div>
+          </div>
+        </div>
+        <div class="entity">
+          <div class="entity-head">admin_users</div>
+          <div class="entity-body">
+            <div><span class="fname">id</span><span>uuid</span></div>
+            <div><span class="fname">email</span><span>text unique</span></div>
+            <div><span class="fname">password_hash</span><span>text</span></div>
+            <div><span class="fname">role</span><span>admin / staff</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="dashboard">
+      <div class="sec-head">
+        <span class="sec-num">08</span>
+        <h2>Dashboard สรุปผลสำหรับผู้ดูแล</h2>
+        <p class="sec-desc">เทียบยอดลงทะเบียนกับยอดเช็คอินจริงต่องาน</p>
+      </div>
+      <div class="dash-mock">
+        <div class="kpi-row">
+          <div class="kpi"><div class="v tabnum">24</div><div class="l">งานอบรมทั้งหมด</div></div>
+          <div class="kpi"><div class="v tabnum">3,860</div><div class="l">ยอดลงทะเบียนสะสม</div></div>
+          <div class="kpi"><div class="v tabnum">82%</div><div class="l">อัตราเช็คอินจริงเฉลี่ย</div></div>
+          <div class="kpi"><div class="v tabnum">2,910</div><div class="l">ใบประกาศที่ออกแล้ว</div></div>
+        </div>
+        <div class="bar-chart" style="margin-bottom:28px;">
+          <div class="bar" style="height:90%"><span>Workshop A</span></div>
+          <div class="bar b2" style="height:70%"></div>
+          <div class="bar" style="height:75%"><span>Seminar B</span></div>
+          <div class="bar b2" style="height:60%"></div>
+          <div class="bar" style="height:100%"><span>Kickoff C</span></div>
+          <div class="bar b2" style="height:65%"></div>
+        </div>
+        <div class="legend">
+          <span><span class="dot" style="background:var(--accent)"></span>ลงทะเบียน</span>
+          <span><span class="dot" style="background:var(--accent-2)"></span>เช็คอินจริง</span>
+        </div>
+      </div>
+      <div class="prose">
+        <p>ตัวชี้วัดที่ควรมีในเฟส MVP:</p>
+        <ul>
+          <li><b>ลงทะเบียน vs เช็คอินจริงรายงาน</b> เพื่อดูอัตรา no-show และวางแผนที่นั่ง/อาหารในงานถัดไป</li>
+          <li><b>สถานะออกใบประกาศ</b> — ออกแล้ว/ยังไม่ออก ต่องาน เพื่อไม่ให้ลืมออกให้ใคร</li>
+          <li><b>ช่วงเวลาที่คนทยอยเช็คอิน</b> (histogram รายชั่วโมง) ช่วยวางแผนจุดคัดกรองหน้างานครั้งต่อไป</li>
+          <li><b>Export Excel</b> รายชื่อผู้ลงทะเบียน/เช็คอิน ต่องาน สำหรับทีมจัดงานใช้ต่อ</li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="nonfunc">
+      <div class="sec-head">
+        <span class="sec-num">09</span>
+        <h2>ข้อกำหนดที่ไม่ใช่ฟังก์ชัน</h2>
+        <p class="sec-desc">โหลดช่วงพีคหน้างาน ความปลอดภัยของ QR และ PDPA</p>
+      </div>
+      <div class="nf-grid">
+        <div class="nf-card">
+          <h4>โหลดช่วงเช็คอิน</h4>
+          <p>ช่วง 15 นาทีแรกก่อนงานเริ่มจะมีคนมาเช็คอินพร้อมกันมาก ควรทดสอบ concurrent write บนตาราง check_ins ให้รองรับได้อย่างน้อยหลักร้อยครั้ง/นาที</p>
+        </div>
+        <div class="nf-card">
+          <h4>ความปลอดภัยของ QR</h4>
+          <p>qr_token เป็นค่าสุ่มยาวพอที่เดาไม่ได้ ผูกกับ registration_id เดียว ใช้เช็คอินซ้ำไม่ได้หลังสถานะเป็น checked-in แล้ว</p>
+        </div>
+        <div class="nf-card">
+          <h4>PDPA / ความเป็นส่วนตัว</h4>
+          <p>แสดง privacy notice ก่อนกดลงทะเบียน ระบุวัตถุประสงค์การเก็บข้อมูลและวันที่จะลบข้อมูลหลังงานผ่านไปตามนโยบายบริษัท</p>
+        </div>
+        <div class="nf-card">
+          <h4>ใช้งานแบบออฟไลน์บางส่วน</h4>
+          <p>คอนโซล check-in ควร cache รายชื่อของงานนั้นไว้ล่วงหน้า เผื่อกรณีอินเทอร์เน็ตหน้างานสะดุดชั่วคราว แล้ว sync กลับเมื่อเน็ตกลับมา</p>
+        </div>
+        <div class="nf-card">
+          <h4>ความถูกต้องของใบประกาศ</h4>
+          <p>เลขที่ใบรับรอง (cert_no) ต้อง unique และตรวจสอบย้อนกลับได้ กันกรณีมีคนขอออกซ้ำหรือโต้แย้งภายหลัง</p>
+        </div>
+        <div class="nf-card">
+          <h4>สิทธิ์การใช้งาน CMS</h4>
+          <p>แยกสิทธิ์ระหว่าง admin (จัดการงาน/ออกใบประกาศ) กับ staff (เช็คอินหน้างานอย่างเดียว) เพื่อจำกัดความเสี่ยงหน้างาน</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="roadmap">
+      <div class="sec-head">
+        <span class="sec-num">10</span>
+        <h2>แผนดำเนินงาน</h2>
+        <p class="sec-desc">ลำดับการสร้างจริง</p>
+      </div>
+
+      <div class="phase">
+        <div class="phase-num tabnum">0</div>
+        <div>
+          <h3>เตรียมโครงสร้าง <span class="dur">1 สัปดาห์</span></h3>
+          <ul>
+            <li>ออกแบบ schema ฐานข้อมูล และเทมเพลตอีเมล/ใบประกาศเบื้องต้น</li>
+            <li>ตกลงรูปแบบหน้า pre-register และ consent PDPA กับทีมกฎหมาย/HR</li>
+          </ul>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="phase-num tabnum">1</div>
+        <div>
+          <h3>MVP <span class="dur">3–4 สัปดาห์</span></h3>
+          <ul>
+            <li>สร้างงาน, หน้า pre-register สาธารณะ, ส่งอีเมลยืนยัน+QR</li>
+            <li>Check-in Console (สแกน QR + ค้นหาชื่อ), หน้าจัดการรายชื่อผู้ลงทะเบียน</li>
+          </ul>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="phase-num tabnum">2</div>
+        <div>
+          <h3>ใบประกาศและรายงาน <span class="dur">2–3 สัปดาห์</span></h3>
+          <ul>
+            <li>ระบบออกใบประกาศแบบ bulk, หน้าดาวน์โหลดซ้ำสำหรับผู้เข้าร่วม</li>
+            <li>แดชบอร์ดสรุปผล export Excel</li>
+          </ul>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="phase-num tabnum">3</div>
+        <div>
+          <h3>ต่อยอด <span class="dur">ตามรอบใช้งานจริง</span></h3>
+          <ul>
+            <li>โหมดออฟไลน์เต็มรูปแบบสำหรับคอนโซล check-in, แจ้งเตือนอีเมลก่อนงาน 1 วัน</li>
+            <li>พิจารณาเชื่อมกับ Training Management System ในอนาคตหากต้องรวมประวัติการอบรมของพนักงานเป็นที่เดียว</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      Onsite Check-in Blueprint — ฉบับร่างสำหรับหารือขอบเขตก่อนเริ่มพัฒนา
+    </footer>
+  </main>
+</div>
+</body>
+</html>
